@@ -23,8 +23,13 @@ def server():
     print ("[S]: Got a connection request from a client at {}".format(addr))
 
     # send a intro message to the client.  
-    msg = "This is a message to be backwards"
-    csockid.send(msg.encode('utf-8'))
+    # msg = "This is a message to be backwards"
+    # csockid.send(msg.encode('utf-8'))
+
+    # decodes data from client
+    data_from_server = csockid.recv(200)
+    message = data_from_server.decode('utf-8')
+    print(message)
 
     # Close the server socket
     ss.close()
