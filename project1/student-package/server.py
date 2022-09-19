@@ -22,14 +22,18 @@ def server():
     csockid, addr = ss.accept()
     print ("[S]: Got a connection request from a client at {}".format(addr))
 
-    # send a intro message to the client.  
-    # msg = "This is a message to be backwards"
-    # csockid.send(msg.encode('utf-8'))
-
     # decodes data from client
-    data_from_server = csockid.recv(200)
-    message = data_from_server.decode('utf-8')
-    print(message)
+    # data_from_server = csockid.recv(200)
+    # message = data_from_server.decode('utf-8')
+    
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((host, 50007))
+        data = s.recv(200)
+        messageLine = data.decode('utf-8')
+        print(messageLine)
+
+    # for each /n in message, reverse the string and write it in out-proj.txt
+    # messageList = message.split("\n")
 
     # Close the server socket
     ss.close()

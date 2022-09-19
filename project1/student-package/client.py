@@ -20,20 +20,14 @@ def client():
     server_binding = (localhost_addr, port)
     cs.connect(server_binding)
 
-    # Receive data from the server
-    # data_from_server=cs.recv(100)
-    # message = data_from_server.decode('utf-8')[::-1]
-    # print("[C]: Data received from server: %s" %(message))
-
-    # send a intro message to the server.  
-    # msg = "client to server backwards"
-    # cs.send(msg.encode('utf-8'))
-
     # reads in the input file
     file1 = open('in-proj.txt', 'r')
-    Lines = file1.read()
+    Lines = file1.readlines()
   
-    cs.send(Lines.encode('utf-8'))
+    # cs.send(Lines.encode('utf-8'))
+
+    for line in Lines:
+        cs.send(line.encode('utf-8'))
 
     # close the client socket
     cs.close()
