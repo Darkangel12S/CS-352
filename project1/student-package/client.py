@@ -20,13 +20,11 @@ def client():
     server_binding = (localhost_addr, port)
     cs.connect(server_binding)
 
-    # reads in the input file
-    file1 = open('in-proj.txt', 'r')
-    Lines = file1.readlines()
-  
-    # cs.send(Lines.encode('utf-8'))
-
-    for line in Lines:
+    # reads in the input file line by line and sends it to the server
+    inFile = open("in-proj.txt", 'r')
+    inLines = inFile.readlines()
+    for line in inLines:
+        print(line)
         cs.send(line.encode('utf-8'))
 
     # close the client socket
