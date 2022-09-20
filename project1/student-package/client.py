@@ -24,11 +24,17 @@ def client():
     inFile = open("in-proj.txt", 'r')
     inLines = inFile.readlines()
     for line in inLines:
-        print(line)
-        cs.send(line.encode('utf-8'))
+        cs.sendall(line.encode('utf-8'))
+        ok = cs.recv(100)
+        if ok != 'ok':
+            break
 
     # close the client socket
     cs.close()
+
+    # close the file
+    inFile.close()
+
     exit()
 
 if __name__ == "__main__":
