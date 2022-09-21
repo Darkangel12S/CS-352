@@ -24,15 +24,17 @@ def server():
     print ("[S]: Got a connection request from a client at {}".format(addr))
 
     # Creates the output file
-    outFile = open("out-proj.txt","w")
+    outFile = open("out-proj.txt","a")
+    outFile.truncate(0)
 
     # Continuously receives data from the client
     while True:
-        data = csockid.recv(200).decode('utf-8')
+        data = csockid.recv(200).decode('utf-8').strip('\n')
         if not data:
             break
         csockid.send('ok')
-        reversed = data[::-1].strip('\n')
+        reversed = data[::-1]
+        print(reversed)
         outFile.writelines(reversed)
 
     # Close the server socket
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     t1 = threading.Thread(name='server', target=server)
     t1.start()
 
-    time.sleep(5)
+    # time.sleep(5)
     print("Done.")
 
     
