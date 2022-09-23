@@ -23,12 +23,13 @@ def client():
     # reads in the input file line by line and sends it to the server
     inFile = open("in-proj.txt", 'r')
     inLines = inFile.readlines()
-    for line in inLines:   
-        cs.sendall(line.encode('utf-8').strip('\n'))
-        print(line)
+
+    for line in inLines: 
+        cs.sendall(line.encode('utf-8'))
         ok = cs.recv(100)
+        print(line.strip('\n'))
         if ok != 'ok':
-            break
+           break  
 
     # close the client socket
     cs.close()
@@ -37,6 +38,15 @@ def client():
     inFile.close()
 
     exit()
+
+def func():
+    with open("out-proj.txt", 'r+') as fp:
+        lines = fp.readlines()
+        # move file pointer to the beginning of a file
+        fp.seek(0)
+        # truncate the file
+        fp.truncate()
+        fp.writelines(lines[1:])
 
 if __name__ == "__main__":
     # t1 = threading.Thread(name='server', target=server)
@@ -48,3 +58,5 @@ if __name__ == "__main__":
     
     # time.sleep(5)
     print("Done.")
+
+    func()

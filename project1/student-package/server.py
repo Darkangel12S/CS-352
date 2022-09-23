@@ -27,24 +27,31 @@ def server():
     outFile = open("out-proj.txt","a")
     outFile.truncate(0)
 
+    inFile = open("in-proj.txt", 'r')
+    inLines = inFile.readlines()
+    numLines = len(inLines)
+
     # Continuously receives data from the client
+    iteration = 0
     while True:
         data = csockid.recv(200).decode('utf-8').strip('\n')
-        if not data:
-            break
         csockid.send('ok')
         reversed = data[::-1]
         print(reversed)
+        iteration += 1
+        if (iteration == numLines):
+            outFile.writelines('\n')
         outFile.writelines(reversed)
-
-    # Close the server socket
-    ss.close()
+        if not data:
+            break
 
     # Close the file
     outFile.close()
 
-    exit()
+    # Close the server socket
+    ss.close()
 
+    exit() 
 
 if __name__ == "__main__":
     t1 = threading.Thread(name='server', target=server)
@@ -52,5 +59,6 @@ if __name__ == "__main__":
 
     # time.sleep(5)
     print("Done.")
+
 
     
