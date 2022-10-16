@@ -30,10 +30,9 @@ def client(host, port):
         website = line.strip('\n')
         sock.sendall(website.encode('utf-8'))
         
-        # reciving ok right now, should be message later
-        ok = sock.recv(100)
-        if ok != 'ok':
-           break  
+        # recieve message and write to the output file
+        message = sock.recv(500)
+        outFile.write(message)
 
 # Step5: close the files descriptors and socket connections and exit
     sock.close()
