@@ -37,7 +37,7 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
         # On getting response send it back to client.
         # if no response then select() times out, send client error message.
         inputs = [ts1, ts2]
-        outputs = []
+        outputs = [sock]
         message_queues = {}
 
         # Inputs list:The first is a list of the objects to be checked for incoming data to be read (ts1, ts2 sockets in
@@ -67,24 +67,24 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
                     inputs.remove(s)
                     s.close()
                     del message_queues[s]
-    for s in writable:
-        try:
-            message_queue = message_queues.get(s)
-            send_data = ''
-            if message_queue is not None:
-                send_data = message_queue.get_nowait()
-        except queue.Queue.Empty:
-            outputs.remove(s)
-        else:
-            if message_queue is not None:
-                s.send(send_data)
-    for s in errors:
-        inputs.remove(s)
-        if s in outputs:
-            outputs.remove(s)
-        s.close()
+        for s in writable:
+            try:
+                message_queue = message_queues.get(s)
+                send_data = ''
+                if message_queue is not None:
+                    send_data = message_queue.get_nowait()
+            except queue.Queue.Empty:
+                outputs.remove(s)
+            else:
+                if message_queue is not None:
+                    s.send(send_data)
+        for s in errors:
+            inputs.remove(s)
+            if s in outputs:
+                outputs.remove(s)
+            s.close()
 
-        del message_queues[s]
+            del message_queues[s]
 
 # function to build a connection with the TS
 def build_ts_cnn(port, address):
