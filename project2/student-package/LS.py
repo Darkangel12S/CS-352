@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from http import server
 import queue
 import select
@@ -37,37 +36,37 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
         # Step4: Let select() monitor ts1 and ts2 for response
         # On getting response send it back to client.
         # if no response then select() times out, send client error message.
-        inputs = [sock]
+        inputs = [ts1, ts2]
         outputs = []
+        message_queues = {}
 
         # Inputs list:The first is a list of the objects to be checked for incoming data to be read (ts1, ts2 sockets in
         # project)(receive)
         # Outputs list: the second contains objects that will receive outgoing data when there is room in their buffer(send)
         # Error list: the third those that may have an error (usually a combination of the input and output channel objects).
-    message_queues = {}
         
-    while inputs: 
-        readable, writable, errors = select.select(inputs, outputs, [], 5)
+        while inputs: 
+            readable, writable, errors = select.select(inputs, outputs, [], 5)
 
-    # accept the messages from the client from client
-    for s in readable:
-        if s is server:
-            connection, client_address = s.accept()
-            connection.setblocking(0)
-            inputs.append(connection)
-            message_queues[connection] = queue.Queue()
-        else:
-            data = s.recv(500)
-            if data != '':
-                message_queues[s].put(data)
-                if s not in outputs:
-                    outputs.append(s)
+        # accept the messages from the client from client
+        for s in readable:
+            if s is server:
+                connection, client_address = s.accept()
+                connection.setblocking(0)
+                inputs.append(connection)
+                message_queues[connection] = queue.Queue()
             else:
-                if s in outputs:
-                    outputs.remove(s)
-                inputs.remove(s)
-                s.close()
-                del message_queues[s]
+                data = s.recv(500)
+                if data != '':
+                    message_queues[s].put(data)
+                    if s not in outputs:
+                        outputs.append(s)
+                else:
+                    if s in outputs:
+                        outputs.remove(s)
+                    inputs.remove(s)
+                    s.close()
+                    del message_queues[s]
     for s in writable:
         try:
             message_queue = message_queues.get(s)
