@@ -1,5 +1,3 @@
-# read domain names from PROJ2-HNS.txt
-# Write outputs it receives into RESOLVED.txt 
 import socket
 import sys
 import time 
@@ -49,4 +47,3 @@ if __name__ == "__main__":
 
     # pass arguments to thread
     client(lsHostname, int(lsListenPort))
-

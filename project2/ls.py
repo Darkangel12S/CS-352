@@ -107,6 +107,3 @@ if __name__ == "__main__":
 
     # pass arguments to thread
     Lserver(int(lsListenPort), ts1Hostname, int(ts1ListenPort), ts2Hostname, int(ts2ListenPort))
-
-    # time.sleep(5)
-    print("Done.")

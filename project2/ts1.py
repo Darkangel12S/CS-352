@@ -1,14 +1,5 @@
-# Step3: In a loop, accept connection from rs.
-# Receive query from rs and decode it.
-# open the "PROJ2-DNSTS1.txt" file (can read this file and load into a dictionary).
-# check if query is present, if present send response.
-# else do nothing.close socket connection with rs.
-# Step4: close the socket connection and exit.
-
-import select
 import socket
 import sys
-import threading
 
 def TS1(ts1_port):
 # Step1: Open socket connection on ts1 side
@@ -23,11 +14,13 @@ def TS1(ts1_port):
     sock.bind(server_binding)
     sock.listen(5)
 
+# Step3: In a loop, accept connection from rs.
     lssock, addr = sock.accept()
 
     # read the DNSTS1.txt and put it into a map
     DNS1 = {}
 
+# open the "PROJ2-DNSTS1.txt" file (can read this file and load into a dictionary).
     with open('PROJ2-DNSTS1.txt', 'r') as file:
         websites = file.readlines()
         for line in websites:
@@ -39,13 +32,16 @@ def TS1(ts1_port):
                 DNS1[URL] = IP
 
     print(DNS1)
-    
+
     while True:
         data, tuple = lssock.recvfrom(500)
+# Receive query from rs and decode it.
         website = data.decode('utf-8').strip('\n')
 
         print(website + ' ' + str(website.lower() in DNS1.keys()))
 
+# check if query is present, if present send response.
+# else do nothing.close socket connection with rs.
         if website.lower() in DNS1.keys():
             print('website found')
             newData = website + ' ' + DNS1[website.lower()] + ' A IN'
@@ -54,12 +50,10 @@ def TS1(ts1_port):
         if not data:
             break
 
+# Step4: close the socket connection and exit.
     sock.close() 
 
 if __name__ == "__main__":
     ts1_port = sys.argv[1]
 
     TS1(int(ts1_port))
-
-
-
