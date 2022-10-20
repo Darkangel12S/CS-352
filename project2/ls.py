@@ -1,13 +1,12 @@
+import errno
 import select
 import socket
 import sys
-import threading
 
-def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
+def Lserver(port, ts1_addr, ts1_port, ts2_addr, ts2_port,):
 # Step1: Open socket connection on rs side.
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setblocking(0)
         print("[S]: Server socket created")
     except socket.error as err:
         print('socket open error: {}\n'.format(err))
@@ -19,7 +18,9 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
     sock.bind(server_binding)
     sock.listen(5)
 
-    # save ts1,2 addresses and port
+    csockid, addr = sock.accept()
+
+    # save ts1,2 addresses and port to send
     ts1Connect = (ts1_addr, ts1_port)
     ts2Connect = (ts2_addr, ts2_port)
 
@@ -30,6 +31,7 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
     except socket.error as err:
         print('socket open error: {}\n'.format(err))
         exit()
+    ts1.connect(ts1Connect)
     ts1.setblocking(0)
 
     # connect to TS2
@@ -39,6 +41,7 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
     except socket.error as err:
         print('socket open error: {}\n'.format(err))
         exit()
+    ts2.connect(ts2Connect)
     ts2.setblocking(0)
 
     # lists for select 
@@ -48,11 +51,21 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
 # step3: accept client connection in loop.
 # step3: Receive queries from client in loop, open socket connections to ts1 and ts2, send decoded query to ts1 and ts2
     while True:
-        website = sock.recv(200).decode('utf-8').strip('\n')
+        website = csockid.recv(500)
+
+        print(website.decode('utf-8').strip('\n'))
 
         # send website to ts1 and 2
-        ts1.sendto(website.encode('utf-8'), ts1Connect)
-        ts2.sendto(website.encode('utf-8'), ts2Connect)
+        try:
+            ts1.sendto(website, ts1Connect)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                pass
+        try:
+            ts2.sendto(website, ts2Connect)
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                pass
 
         # Step4: Let select() monitor ts1 and ts2 for response
         # On getting response send it back to client.
@@ -73,23 +86,27 @@ def Lserver(port, ts1_port, ts1_addr, ts2_port, ts2_addr):
             for s in readable:
                 website = s.recv(500)
         else:
-            website = 'TIMED OUT'.encode('utf-8')
+            website = (website.strip('\n') + ' - TIMED OUT').encode('utf-8')
         
         # send data to client
-        sock.send(website)
+        csockid.send(website)
+    
+    sock.close()
+    csockid.close()
+    ts1.close()
+    ts2.close()
+
 
 if __name__ == "__main__":
     # pass arguments of name and port
-    lsListenPort = sys.args[1]
-    ts1Hostname = sys.args[2]
-    ts1ListenPort = sys.args[3]
-    ts2Hostname = sys.args[4]
-    ts2ListenPort = sys.args[5]
+    lsListenPort = sys.argv[1]
+    ts1Hostname = sys.argv[2]
+    ts1ListenPort = sys.argv[3]
+    ts2Hostname = sys.argv[4]
+    ts2ListenPort = sys.argv[5]
 
     # pass arguments to thread
-    t2 = threading.Thread(name='Lserver', target=Lserver, args=(lsListenPort, ts1Hostname, 
-                                                                ts1ListenPort, ts2Hostname, ts2ListenPort, ))
-    t2.start()
+    Lserver(int(lsListenPort), ts1Hostname, int(ts1ListenPort), ts2Hostname, int(ts2ListenPort))
 
     # time.sleep(5)
     print("Done.")

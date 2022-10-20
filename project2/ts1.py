@@ -19,46 +19,47 @@ def TS1(ts1_port):
         print('socket open error: {}\n'.format(err))
         exit()
     # Step2: Bind to the (ip,port) pair and listen for client connections.
-    host = socket.gethostname()
-    port = ts1_port
-    server_binding = (host, port)
+    server_binding = ('', ts1_port)
     sock.bind(server_binding)
     sock.listen(5)
+
+    lssock, addr = sock.accept()
 
     # read the DNSTS1.txt and put it into a map
     DNS1 = {}
 
     with open('PROJ2-DNSTS1.txt', 'r') as file:
-        websites = file.readLines()
+        websites = file.readlines()
         for line in websites:
             URL, IP, resource = line.split(' ')
-            URL = str(URL)
+            URL = str(URL).lower()
             IP = str(IP)
             resource = str(resource)
             if (DNS1.get(URL) is None):
                 DNS1[URL] = IP
+
+    print(DNS1)
     
     while True:
-        data = sock.recv(500)
-        website = data.decode('utf-8')
+        data, tuple = lssock.recvfrom(500)
+        website = data.decode('utf-8').strip('\n')
 
-        if DNS1.has_key(website):
-            newData = website + ' ' + DNS1[website] + ' A IN'
-            sock.send(newData)
+        print(website + ' ' + str(website.lower() in DNS1.keys()))
+
+        if website.lower() in DNS1.keys():
+            print('website found')
+            newData = website + ' ' + DNS1[website.lower()] + ' A IN'
+            lssock.send(newData)
+            
+        if not data:
             break
 
     sock.close() 
 
 if __name__ == "__main__":
-    # pass arguments of name and port
-    ts1_port = sys.args[1]
+    ts1_port = sys.argv[1]
 
-    # pass arguments to thread
-    ts1 = threading.Thread(name='TS1', target=TS1, args=(ts1_port, ))
-    ts1.start()
-
-    # time.sleep(5)
-    print("Done.")
+    TS1(int(ts1_port))
 
 
 
