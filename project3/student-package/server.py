@@ -46,10 +46,10 @@ success_page = """
 #### Helper functions
 # Printing.
 def print_value(tag, value):
-    # print "Here is the", tag
-    # print "\"\"\""
-    # print value
-    # print "\"\"\""
+    print("Here is the", tag)
+    print("\"\"\"")
+    print(value)
+    print("\"\"\"")
     print
 
 # Signal handler for graceful exit
@@ -71,7 +71,7 @@ signal.signal(signal.SIGINT, sigint_handler)
 ### Loop to accept incoming HTTP connections and respond.
 while True:
     client, addr = sock.accept()
-    req = client.recv(1024)
+    req = client.recv(1024).decode('utf-8')
 
     # Let's pick the headers and entity body apart
     header_body = req.split('\r\n\r\n')
@@ -104,10 +104,10 @@ while True:
     response += 'Content-Type: text/html\r\n\r\n'
     response += html_content_to_send
     print_value('response', response)    
-    client.send(response)
+    client.send(response.encode('utf-8'))
     client.close()
     
-    # print "Served one request/connection!"
+    print("Served one request/connection!")
     print
 
 # We will never actually get here.
