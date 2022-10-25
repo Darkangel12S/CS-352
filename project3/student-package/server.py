@@ -22,7 +22,7 @@ login_form = """
    <form action = "http://localhost:%d" method = "post">
    Name: <input type = "text" name = "username">  <br/>
    Password: <input type = "text" name = "password" /> <br/>
-   <input type = "submit" value = "Submit" />
+   <input type = "submit" value = "Submit" name = "button"/>
    </form>
 """ % port
 # Default: Login page.
@@ -60,13 +60,28 @@ def sigint_handler(sig, frame):
 # Register the signal handler
 signal.signal(signal.SIGINT, sigint_handler)
 
-
 # TODO: put your application logic here!
 # Read login credentials for all the users
+passwords = {}
+passwordFile = open('passwords.txt', 'r')
+lines = passwordFile.readlines()
+for line in lines:
+    creds = line.split(' ')
+    username = creds[0].strip('\n')
+    password = creds[1].strip('\n')
+    passwords[username] = password
+passwordFile.close()
+
 # Read secret data of all the users
-
-
-
+secrets = {}
+secretFile = open('secrets.txt', 'r')
+lines = secretFile.readlines()
+for line in lines:
+    info = line.split(' ')
+    username = info[0].strip('\n')
+    secret = info[1].strip('\n')
+    secrets[username] = secret
+secretFile.close()
 
 ### Loop to accept incoming HTTP connections and respond.
 while True:
