@@ -83,34 +83,59 @@ for line in lines:
     secrets[username] = secret
 secretFile.close()
 
+start = True
+
 ### Loop to accept incoming HTTP connections and respond.
 while True:
     client, addr = sock.accept()
-    req = client.recv(1024).decode('utf-8')
+    req = client.recv(1024)
 
-    # Let's pick the headers and entity body apart
-    header_body = req.split('\r\n\r\n')
-    headers = header_body[0]
-    body = '' if len(header_body) == 1 else header_body[1]
-    print_value('headers', headers)
-    print_value('entity body', body)
+    if start:
+        html_content_to_send = login_page
+        start = False
+    else: 
+        # Let's pick the headers and entity body apart
+        header_body = req.decode('utf-8').split('\r\n\r\n')
+        headers = header_body[0]
+        body = '' if len(header_body) == 1 else header_body[1]
+        print_value('headers', headers)
+        print_value('entity body', body)
 
-    # TODO: Put your application logic here!
-    # Parse headers and body and perform various actions
+        # TODO: Put your application logic here!
+        # Parse headers and body and perform various actions
+
+        if body == '':
+            html_content_to_send = login_page
+            print('EMPTY BODY')
+        else:
+            credentials = body.strip('\n').split('&')
+            _, username = credentials[0].split('=')
+            if username == 'logout':
+                html_content_to_send = login_page
+            else:
+                _, password = credentials[1].split('=')
+                _, submit = credentials[2].split('=')
+                if (username in passwords and passwords[username] == password):
+                    html_content_to_send = success_page + secrets[username]
+                    print('CREDENTIALS MATCH')
+                else:
+                    html_content_to_send = bad_creds_page
+                    print('BAD MATCH')
 
     # You need to set the variables:
     # (1) `html_content_to_send` => add the HTML content you'd
     # like to send to the client.
     # Right now, we just send the default login page.
-    html_content_to_send = login_page
+    #html_content_to_send = login_page
     # But other possibilities exist, including
     # html_content_to_send = success_page + <secret>
     # html_content_to_send = bad_creds_page
     # html_content_to_send = logout_page
-    
+        
     # (2) `headers_to_send` => add any additional headers
     # you'd like to send the client?
-    # Right now, we don't send any extra headers.
+    # Right now, we don't send any extra headers.    
+    
     headers_to_send = ''
 
     # Construct and send the final response
@@ -121,7 +146,7 @@ while True:
     print_value('response', response)    
     client.send(response.encode('utf-8'))
     client.close()
-    
+            
     print("Served one request/connection!")
     print
 
