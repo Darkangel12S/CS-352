@@ -85,6 +85,10 @@ secretFile.close()
 
 start = True
 
+cookies = {}
+
+headers_to_send = ''
+
 ### Loop to accept incoming HTTP connections and respond.
 while True:
     client, addr = sock.accept()
@@ -98,11 +102,23 @@ while True:
         header_body = req.decode('utf-8').split('\r\n\r\n')
         headers = header_body[0]
         body = '' if len(header_body) == 1 else header_body[1]
+        print()
+        print('---------------------------------------------')
+        print()
         print_value('headers', headers)
         print_value('entity body', body)
 
         # TODO: Put your application logic here!
         # Parse headers and body and perform various actions
+        headerlines = headers.split('\n')
+        cookieStatus = False
+        if 'Cookie: token=' in headerlines[len(headerlines) - 1]:
+            cookieStatus = True
+        # print(cookieStatus)
+        # extract the cookie and see if it is in cookies[]
+        # if it is, authenticiate immediatley and skip the login
+        # if it is not, send to bad login page
+        # if there is no cookie, send to login_page
 
         if body == '':
             html_content_to_send = login_page
@@ -117,6 +133,9 @@ while True:
                 _, submit = credentials[2].split('=')
                 if (username in passwords and passwords[username] == password):
                     html_content_to_send = success_page + secrets[username]
+                    rand_val = random.getrandbits(64)
+                    cookies[rand_val] = username
+                    headers_to_send = 'Set-Cookie: token=' + str(rand_val) + '\r\n'
                     print('CREDENTIALS MATCH')
                 else:
                     html_content_to_send = bad_creds_page
@@ -136,7 +155,6 @@ while True:
     # you'd like to send the client?
     # Right now, we don't send any extra headers.    
     
-    headers_to_send = ''
 
     # Construct and send the final response
     response  = 'HTTP/1.1 200 OK\r\n'
