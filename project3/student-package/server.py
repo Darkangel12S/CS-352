@@ -95,7 +95,10 @@ while True:
     req = client.recv(1024)
 
     if start:
+        print('Start Program')
         html_content_to_send = login_page
+        # clear the cookie
+        # headers_to_send = 'Set-Cookie: token=; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n'
         start = False
     else: 
         # Let's pick the headers and entity body apart
@@ -110,36 +113,53 @@ while True:
 
         # TODO: Put your application logic here!
         # Parse headers and body and perform various actions
-        headerlines = headers.split('\n')
-        cookieStatus = False
-        if 'Cookie: token=' in headerlines[len(headerlines) - 1]:
-            cookieStatus = True
         # print(cookieStatus)
         # extract the cookie and see if it is in cookies[]
+        headerlines = headers.split('\n')
+        cookieStatus = False
+        cookie = ''
+        if 'Cookie: token=' in headerlines[len(headerlines) - 1]:
+            print('\nCookie Found')
+            cookieStatus = True
+            cookie = headerlines[len(headerlines) - 1][14:]
+            print('\nCookie is ' + cookie)
         # if it is, authenticiate immediatley and skip the login
-        # if it is not, send to bad login page
-        # if there is no cookie, send to login_page
+        if cookieStatus: 
+            print(cookies)
+            #this if is not working currently
+            if int(cookie) in cookies.keys():
+                print('\nCookie Found in dictionary')
+                html_content_to_send = success_page + secrets[cookies[int(cookie)]]
 
-        if body == '':
+        # if it is not, send to bad login page
+        if 'action=logout' in body:
+            print('LOGOUT ACCOUNT')
             html_content_to_send = login_page
-            print('EMPTY BODY')
-        else:
-            credentials = body.strip('\n').split('&')
-            _, username = credentials[0].split('=')
-            if username == 'logout':
-                html_content_to_send = login_page
+            headers_to_send = 'Set-Cookie: token=; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n'
+        else: 
+        # if there is no cookie, send to login_page
+            if body == '':
+                #html_content_to_send = login_page
+                print('EMPTY BODY/ NOT USED')
             else:
-                _, password = credentials[1].split('=')
-                _, submit = credentials[2].split('=')
-                if (username in passwords and passwords[username] == password):
-                    html_content_to_send = success_page + secrets[username]
-                    rand_val = random.getrandbits(64)
-                    cookies[rand_val] = username
-                    headers_to_send = 'Set-Cookie: token=' + str(rand_val) + '\r\n'
-                    print('CREDENTIALS MATCH')
+                credentials = body.strip('\n').split('&')
+                _, username = credentials[0].split('=')
+                if username == 'logout':
+                    print('LOGOUT ACCOUNT')
+                    html_content_to_send = login_page
+                    headers_to_send = 'Set-Cookie: token=; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n'
                 else:
-                    html_content_to_send = bad_creds_page
-                    print('BAD MATCH')
+                    _, password = credentials[1].split('=')
+                    _, submit = credentials[2].split('=')
+                    if (username in passwords and passwords[username] == password):
+                        html_content_to_send = success_page + secrets[username]
+                        rand_val = random.getrandbits(64)
+                        cookies[rand_val] = username
+                        headers_to_send = 'Set-Cookie: token=' + str(rand_val) + '\r\n'
+                        print('CREDENTIALS MATCH')
+                    else:
+                        html_content_to_send = bad_creds_page
+                        print('BAD MATCH')
 
     # You need to set the variables:
     # (1) `html_content_to_send` => add the HTML content you'd
