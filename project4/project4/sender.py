@@ -171,37 +171,40 @@ def send_reliable(cs, filedata, receiver_binding, win_size):
     # will not need to change any other parts of this file.
     inputs = [cs]
     outputs = []
-
-    win_left_edge = transmit_one()
-
+    last_acked = INIT_SEQNO 
+    final_ack = INIT_SEQNO + content_len
+    first_to_tx=transmit_entire_window_from(win_left_edge)
     while win_left_edge < INIT_SEQNO + content_len:
-        # win_left_edge = transmit_one()
-        # 1. Use “select” to read from the receiver socket in an infinite loop.
-        # 2. Use “RTO” as timeout in select.
+        
         while (True):
             readable, writable, exceptional = select.select(inputs, outputs, [], RTO)
             if readable: 
                 for s in readable:
-                    # 3. Once you get msg from the receiver, deserialize it.(Msg.deserialize(data))
+                    
                     information, addr = s.recvfrom(100)
                     msg = Msg.deserialize(information)
-                    win_left_edge = transmit_one()
                     print("ack received: ", msg.ack)
                     print("seq: ", msg.seq)
-
-                    # 4. Use msg.ack field from message as your left edge of your window.
-                    # If the sequence number is in sequence-to-message-index dictionary then transmit
-                    if msg.ack in seq_to_msgindex:
-                        win_left_edge = msg.ack
-                    # break from the loop as all data transmission is done.
+                    if (msg.ack in seq_to_msgindex):
+                        if(last_acked==final_ack):
+                            break
+                        #checks for fresh ack
+                        if(msg.ack>last_acked):
+                            last_acked = win_left_edge
+                            win_left_edge = msg.ack
+                            win_right_edge = min(win_left_edge + win_size,INIT_SEQNO + content_len)
+                            first_to_tx = transmit_entire_window_from(first_to_tx)
+                            
+                        #
+                        else:
+                            last_acked = msg.ack
                     else:
                         break
-            # If timeout happens then transmit again without updating the left edge of your window.
+                      
+                    
+           
             if not (readable or writable or exceptional):
-                # transmit the thing 
-                _ = transmit_one()
-
-
+                transmit_one()
 if __name__ == "__main__":
     args = parse_args()
     filedata = get_filedata(args['infile'])
